@@ -30,9 +30,9 @@ function gain(g, t) {
 }
 
 
-function wingCurve(pos) {
-  var result = smoothstep(0, 1, pos);
-  result = gain(0.1, result);
+function wingCurve(pos, curve) {
+  var result = smoothstep(0, 1 + curve, pos);
+  result = gain(curve, result);
   return result;
 }
 
@@ -42,29 +42,29 @@ function featherSpread(pos) {
   return result;
 }
 
-function featherRotation(pos) {
+function featherRotation(pos, orient) {
   var result = smoothstep(0, 1, pos);
   result = bias(0.2, result);
-  result = gain(0.8, result);
+  result = gain(orient, result);
 
   return result;
 }
 
-function featherSize(pos) {
+function featherSize(pos, size) {
   var result = smoothstep(0, 1, pos);
-  result = bias(0.7, result);
+  result = bias(size, result);
   result = gain(0.2, result);
 
   return result;
 }
 
-function featherColor(pos) {
-  var offset = smoothstep(0, 1, pos);
+function featherColor(pos, color) {
+  var offset = smoothstep(0, 1, pos) + 0.0001;
   offset = bias(0.8, offset);
   offset = gain(0.1, offset);
   offset *= 150;
 
-  var color = [120 + offset, 110 + offset, 140 + offset];
+  var color = [120 + color + offset, 110 + 0.2 * Math.abs(color) + offset, 140 - color + offset];
   color[0] /= 255;
   color[1] /= 255;
   color[2] /= 255;
