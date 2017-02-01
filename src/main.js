@@ -81,8 +81,8 @@ function onLoad(framework) {
     });
 
     // set camera position
-    camera.position.set(0, 1, 5);
-    camera.lookAt(new THREE.Vector3(0,0,0));
+    camera.position.set(5, 10, -5);
+    camera.lookAt(new THREE.Vector3(0,-10,0));
 
     scene.add(directionalLight);
 
