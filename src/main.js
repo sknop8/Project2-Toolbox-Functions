@@ -6,6 +6,16 @@ import Framework from './framework'
 import Wing from './wing'
 
 var feathers = [];
+var wingParams = {
+    'Curvature': 0.5,
+    'Feather distribution': 0.5,
+    'Feather size': 0.5,
+    'Feather orientation': 0.5,
+    'Flapping speed': 0.5,
+    'Flapping motion': 0.5,
+};
+
+
 
 // called after the scene loads
 function onLoad(framework) {
@@ -26,7 +36,7 @@ function onLoad(framework) {
 
     // set skybox
     var loader = new THREE.CubeTextureLoader();
-    var urlPrefix = '/images/skymap/';
+    var urlPrefix = 'images/skymap/';
 
     var skymap = new THREE.CubeTextureLoader().load([
         urlPrefix + 'px.jpg', urlPrefix + 'nx.jpg',
@@ -38,7 +48,7 @@ function onLoad(framework) {
 
     // load a simple obj mesh
     var objLoader = new THREE.OBJLoader();
-    objLoader.load('/geo/feather.obj', function(obj) {
+    objLoader.load('geo/feather.obj', function(obj) {
 
         // LOOK: This function runs after the obj has finished loading
         var featherGeo = obj.children[0].geometry;
@@ -50,17 +60,16 @@ function onLoad(framework) {
         for(var i = 1; i < 50; i++) {
             var material = lambertWhite.clone();
             var fMesh = new THREE.Mesh(featherGeo, material);
+
             var posZ = Wing.wingCurve(i / 50);
             var posX = Wing.featherSpread(i / 50);
             fMesh.position.setX(i / 10);//posX);
             fMesh.position.setZ((posZ - 0.5) * 10);
             feathers.push(fMesh);
-            // console.log(pos - 0.5);
         
             var rot = Wing.featherRotation(i / 50);
             fMesh.rotation.y = Math.PI / 3;//(30 * rot) ;
             fMesh.rotation.y -= rot * 1.8;
-            console.log("rot: " + rot);
 
             var scale = 2 - Wing.featherSize(i / 50);
             fMesh.scale.set(scale, scale, scale);
@@ -76,7 +85,6 @@ function onLoad(framework) {
     camera.position.set(0, 1, 5);
     camera.lookAt(new THREE.Vector3(0,0,0));
 
-    // scene.add(lambertCube);
     scene.add(directionalLight);
 
     // edit params and listen to changes like this
@@ -84,6 +92,33 @@ function onLoad(framework) {
     gui.add(camera, 'fov', 0, 180).onChange(function(newVal) {
         camera.updateProjectionMatrix();
     });
+
+    gui.add(wingParams, 'Curvature', 0, 1).onChange(function (value) {
+        setWingParams();
+        console.log(wingParams);
+    });
+}
+
+function setWingParams() {
+    for(var i = 1; i < 50; i++) {
+        var fMesh = feathers[i];
+
+        var posZ = Wing.wingCurve(i / 50);
+        var posX = Wing.featherSpread(i / 50);
+        fMesh.position.setX(i / 10);//posX);
+        fMesh.position.setZ((posZ - 0.5) * 10);
+        feathers.push(fMesh);
+
+        var rot = Wing.featherRotation(i / 50);
+        fMesh.rotation.y = Math.PI / 3;//(30 * rot) ;
+        fMesh.rotation.y -= rot * 1.8;
+
+        var scale = 2 - Wing.featherSize(i / 50);
+        fMesh.scale.set(scale, scale, scale);
+
+        var color = Wing.featherColor(i / 50);
+        fMesh.material.color = new THREE.Color(color[0], color[1], color[2]);
+    }
 }
 
 // called on frame updates
@@ -95,7 +130,9 @@ function onUpdate(framework) {
         if (feather !== undefined) {
             // Simply flap wing
             var date = new Date();
-            // feather.rotateZ(Math.sin(date.getTime() / 100) * 2 * Math.PI / 180);  
+
+            var jitter = Wing.windJitter(feather.position.x + date.getMilliseconds(), feather.position.z + date.getMilliseconds());
+            feather.rotateZ(Math.sin(date.getTime() /100 + jitter/10) * 2 * Math.PI / 180);
 
 
         }
